@@ -27,7 +27,7 @@ Rules for creating a new class:
 
   3. Step 3 : Create the neo.io class with the wrapper
     * Create a file in neo/io/ that endith with "io.py"
-    * Create a that hinerits bot yrou RawIO class and BaseFromRaw class
+    * Create a that inherits both your RawIO class and BaseFromRaw class
     * copy/paste from neo/io/exampleio.py
 
   4.Step 4 : IO test
@@ -56,8 +56,8 @@ class ExampleRawIO(BaseRawIO):
     to develop a new IO module.
 
     Two rules for developers:
-      * Respect the Neo RawIO API (:ref:`_neo_rawio_API`)
-      * Follow :ref:`_io_guiline`
+      * Respect the :ref:`neo_rawio_API`
+      * Follow the :ref:`io_guiline`
 
     This fake IO:
         * have 2 blocks
@@ -112,14 +112,19 @@ class ExampleRawIO(BaseRawIO):
         # at the end real_signal = (raw_signal* gain + offset) * pq.Quantity(units)
         sig_channels = []
         for c in range(16):
+#            print("range(16) = ", range(16))
             ch_name = 'ch{}'.format(c)
+#            print("format(c) = ", format(c))
+#            print("ch_name = ", ch_name)
             # our channel id is c+1 just for fun
             # Note that chan_id should be realated to
             # original channel id in the file format
             # so that the end user should not be lost when reading datasets
             chan_id = c + 1
+#            print("chan_id = ", chan_id)
             sr = 10000.  # Hz
             dtype = 'int16'
+#            print("dtype = ", dtype)
             units = 'uV'
             gain = 1000. / 2 ** 16
             offset = 0.
@@ -128,7 +133,9 @@ class ExampleRawIO(BaseRawIO):
             # Here this is the general case :all channel have the same characteritics
             group_id = 0
             sig_channels.append((ch_name, chan_id, sr, dtype, units, gain, offset, group_id))
+#            print("sig_channels.append = ", sig_channels.append((ch_name, chan_id, sr, dtype, units, gain, offset, group_id)))
         sig_channels = np.array(sig_channels, dtype=_signal_channel_dtype)
+#        print("sig_channels = ", sig_channels)
 
         # creating units channels
         # This is mandatory!!!!
@@ -163,8 +170,14 @@ class ExampleRawIO(BaseRawIO):
         self.header['nb_block'] = 2
         self.header['nb_segment'] = [2, 3]
         self.header['signal_channels'] = sig_channels
+        print("self.header['signal_channels] = ", self.header['signal_channels'])
+        print("self.header['signal_channels].size = ", self.header['signal_channels'].size)
         self.header['unit_channels'] = unit_channels
+        print("self.header['unit_channels] = ", self.header['unit_channels'])
+        print("self.header['unit_channels].size = ", self.header['unit_channels'].size)
         self.header['event_channels'] = event_channels
+        print("self.header['event_channels] = ", self.header['event_channels'])
+        print("self.header['event_channels].size = ", self.header['event_channels'].size)
 
         # insert some annotation at some place
         # at neo.io level IO are free to add some annoations
@@ -276,6 +289,7 @@ class ExampleRawIO(BaseRawIO):
         ts_start = (self._segment_t_start(block_index, seg_index) * 10000)
 
         spike_timestamps = np.arange(0, 10000, 500) + ts_start
+        print("spike_timestamps = ", spike_timestamps)
 
         if t_start is not None or t_stop is not None:
             # restricte spikes to given limits (in seconds)
@@ -309,9 +323,13 @@ class ExampleRawIO(BaseRawIO):
         # it is not always the case
         # we 20 spikes with a sweep of 50 (5ms)
 
+        # trick to get how many spike in the slice
+        ts = self._get_spike_timestamps(block_index, seg_index, unit_index, t_start, t_stop)
+        nb_spike = ts.size
+
         np.random.seed(2205)  # a magic number (my birthday)
-        waveforms = np.random.randint(low=-2 ** 4, high=2 ** 4, size=20 * 50, dtype='int16')
-        waveforms = waveforms.reshape(20, 1, 50)
+        waveforms = np.random.randint(low=-2**4, high=2**4, size=nb_spike * 50, dtype='int16')
+        waveforms = waveforms.reshape(nb_spike, 1, 50)
         return waveforms
 
     def _event_count(self, block_index, seg_index, event_channel_index):

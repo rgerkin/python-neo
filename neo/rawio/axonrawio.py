@@ -182,7 +182,7 @@ class AxonRawIO(BaseRawIO):
                     elif info['nTelegraphEnable'][chan_id] == 1:
                         gain /= info['fTelegraphAdditGain'][chan_id]
                     else:
-                        logger.warning('ignoring buggy nTelegraphEnable')
+                        self.logger.warning('ignoring buggy nTelegraphEnable')
                     offset = info['fInstrumentOffset'][chan_id]
                     offset -= info['fSignalOffset'][chan_id]
                 elif version >= 2.:
@@ -348,7 +348,7 @@ class AxonRawIO(BaseRawIO):
                         i_end = i_last + epoch['lEpochInitDuration'] + \
                             epoch['lEpochDurationInc'] * epiNum
                         dif = i_end - i_begin
-                        sig[i_begin:i_end] = np.ones((dif)) * \
+                        sig[i_begin:i_end] = np.ones(dif) * \
                             (epoch['fEpochInitLevel'] + epoch['fEpochLevelInc'] * epiNum)
                         i_last += epoch['lEpochInitDuration'] + \
                             epoch['lEpochDurationInc'] * epiNum
